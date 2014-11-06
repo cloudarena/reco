@@ -122,8 +122,8 @@
       <file leaf-file-name="README.rdoc" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/README.rdoc">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.69899243" vertical-offset="705" max-vertical-offset="4500">
-              <caret line="10" column="90" selection-start-line="10" selection-start-column="79" selection-end-line="10" selection-end-column="90" />
+            <state vertical-scroll-proportion="0.29848868" vertical-offset="1458" max-vertical-offset="4500">
+              <caret line="113" column="0" selection-start-line="113" selection-start-column="0" selection-end-line="113" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -947,8 +947,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/README.rdoc">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.69899243" vertical-offset="705" max-vertical-offset="4500">
-          <caret line="10" column="90" selection-start-line="10" selection-start-column="79" selection-end-line="10" selection-end-column="90" />
+        <state vertical-scroll-proportion="0.29848868" vertical-offset="1458" max-vertical-offset="4500">
+          <caret line="113" column="0" selection-start-line="113" selection-start-column="0" selection-end-line="113" selection-end-column="0" />
           <folding />
         </state>
       </provider>
