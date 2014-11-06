@@ -266,27 +266,3 @@ predictor.delete_from_matrix!(:topics, "course-1")
 ```
 * Regenerate your recommendations, as redis keys have changed for Predictor 2. You can use the recommender.clean! to clear out old similarities, then run your rake task (or whatever you've setup) to create new similarities.
 
-Problems? Issues? Want to help out?
----------------------
-Just submit a Gihub issue or pull request! We'd love to have you help out, as the most common library to use for this need, Recommendify, was last updated 2 years ago. We'll be sure to keep this maintained, but we could certainly use your help!
-
-The MIT License (MIT)
----------------------
-Copyright (c) 2014 Pathgather
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
