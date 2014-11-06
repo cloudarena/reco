@@ -4,9 +4,42 @@ Recommender & Redis
 
 At the moment, Predictor uses the [Jaccard index](http://en.wikipedia.org/wiki/Jaccard_index) or the [Sorenson-Dice coefficient](http://en.wikipedia.org/wiki/S%C3%B8rensen%E2%80%93Dice_coefficient) (default is Jaccard) to determine similarities between items.
 
-Notice
+
+2.3.0
 ---------------------
-This is the readme for Predictor 2.0, which contains a few breaking changes from 1.0. The 1.0 readme can be found [here](https://github.com/Pathgather/predictor/blob/master/docs/READMEv1.md). See below on how to upgrade to 2.0
+* The logic for processing item similarities was ported to a Lua script. Use `Predictor.processing_technique(:lua)` to use the Lua script for all similarity calculations, or use `MyRecommender.processing_technique(:lua)` to use it for specific recommenders. It is substantially faster than the default (old) Ruby mechanism, but has the disadvantage of blocking the Redis server while it runs.
+* An alternate method of calculating item similarities was added, which uses a ZUNIONSTORE across item sets. The results are similar to those achieved by using the Ruby or Lua scripts, but faster. Use `Predictor.processing_technique(:union)` to use the ZUNIONSTORE technique for all similarity calculations, or use `MyRecommender.processing_technique(:union)` to use it for specific recommenders.
+
+2.2.0 (2014-06-24)
+---------------------
+* The namespace used for keys in Redis is now configurable on a global or per-class basis. See the readme for more information. If you were overriding the redis_prefix instance method before, it is recommended that you use the new redis_prefix class method instead.
+* Data stored in Redis is now namespaced by the class name of the recommender it is stored by. This change ensures that different recommenders with input matrices of the same name don't overwrite each others' data. After upgrading you'll need to either reindex your data in Redis or configure Predictor to use the naming system you were using before. If you were using the defaults before and you're not worried about matrix name collisions, you can mimic the old behavior with:
+```ruby
+  class MyRecommender
+    include Predictor::Base
+    redis_prefix [nil]
+  end
+```
+* The #predictions_for method on recommenders now accepts a :boost option to give more weight to items with particular attributes. See the readme for more information.
+
+2.1.0 (2014-06-19)
+---------------------
+* The similarity limit now defaults to 128, instead of being unlimited. This is intended to save space in Redis. See the Readme for more information. It is strongly recommended that you run `ensure_similarity_limit_is_obeyed!` to shrink existing similarity sets.
+
+2.0.0 (2014-04-17)
+---------------------
+**Rewrite of 1.0.0 and contains several breaking changes!**
+
+Version 1.0.0 (which really should have been 0.0.1) contained several issues that made compatability with v2 not worth the trouble. This includes:
+* In v1, similarities were cached per input_matrix, and Predictor::Base utilized those caches when determining similarities and predictions. This quickly ate up Redis memory with even a semi-large dataset, as each input_matrix had a significant memory requirement. v2 caches similarities at the root (Recommender::Base), which means you can add any number of input matrices with little impact on memory usage.
+* Added the ability to limit the number of items stored in the similarity cache (via the 'limit_similarities_to' option). Now that similarities are cached at the root, this is possible and can greatly help memory usage.
+* Removed bang methods from input_matrix (add_set!, and_single!, etc). These called process! for you previously, but since the cache is no longer kept at the input_matrix level, process! has to be called at the root (Recommender::Base)
+* Bug fix: Fixed bug where a call to delete_item! on the input matrix didn't update the similarity cache.
+* Other minor fixes.
+
+
+
+
 
 Installation
 ---------------------
@@ -29,14 +62,14 @@ Inputting Data
 ---------------------
 Create a class and include the Predictor::Base module. Define an input_matrix for each relationship you'd like to keep track of. This can be anything you think is a significant metric for the item: page views, purchases, categories the item belongs to, etc.
 
-Below, we're building a recommender to recommend courses based off of:
-* Users that have taken a course. If 2 courses were taken by the same user, this is 3 times as important to us than if the courses share the same topic. This will lead to sets like:
+Below, we're building a recommender to recommend channels based off of:
+* Users that have taken a course. If 2 channels were taken by the same user, this is 3 times as important to us than if the channels share the same topic. This will lead to sets like:
   * "user1" -> "course-1", "course-3",
   * "user2" -> "course-1", "course-4"
-* Tags and their courses. This will lead to sets like:
+* Tags and their channels. This will lead to sets like:
   * "rails" -> "course-1", "course-2",
   * "microeconomics" -> "course-3", "course-4"
-* Topics and their courses. This will lead to sets like:
+* Topics and their channels. This will lead to sets like:
   * "computer science" -> "course-1", "course-2",
   * "economics and finance" -> "course-3", "course-4"
 
@@ -50,7 +83,7 @@ class CourseRecommender
 end
 ```
 
-Now, we just need to update our matrices when courses are created, users take a course, topics are changed, etc:
+Now, we just need to update our matrices when channels are created, users take a course, topics are changed, etc:
 ```ruby
 recommender = CourseRecommender.new
 
@@ -58,7 +91,7 @@ recommender = CourseRecommender.new
 recommender.add_to_matrix!(:topics, "topic-1", "course-1")
 
 # If your dataset is even remotely large, add_to_matrix! could take some time, as it must calculate the similarity scores
-# for course-1 and other courses that share a set with course-1. If this is the case, use add_to_matrix and
+# for course-1 and other channels that share a set with course-1. If this is the case, use add_to_matrix and
 # process the items at a more convenient time, perhaps in a background job
 recommender.topics.add_to_set("topic-1", "course-1", "course-2") # Same as recommender.add_to_matrix(:topics, "topic-1", "course-1", "course-2")
 recommender.process_items!("course-1", "course-2")
@@ -76,7 +109,7 @@ As noted above, it's important to remember that if you don't use the bang method
 
 Retrieving Similarities and Recommendations
 ---------------------
-Now that your matrices have been initialized with several relationships, you can start generating similarities and recommendations! First, let's start with similarities, which will use the weights we specify on each matrix to determine which courses share the most in common with a given course.
+Now that your matrices have been initialized with several relationships, you can start generating similarities and recommendations! First, let's start with similarities, which will use the weights we specify on each matrix to determine which channels share the most in common with a given course.
 
 ![Course Alternative](http://pathgather.github.io/predictor/images/course-alts.png)
 
@@ -92,11 +125,11 @@ recommender.similarities_for("course-1", offset: 10, limit: 10) # Gets similarit
 # Want scores?
 recommender.similarities_for("course-1", with_scores: true)
 
-# Want to ignore a certain set of courses in similarities?
+# Want to ignore a certain set of channels in similarities?
 recommender.similarities_for("course-1", exclusion_set: ["course-2"])
 ```
 
-The above examples are great for situations like "Users that viewed this also liked ...", but what if you wanted to recommend courses to a user based on the courses they've already taken? Not a problem!
+The above examples are great for situations like "Users that viewed this also liked ...", but what if you wanted to recommend channels to a user based on the channels they've already taken? Not a problem!
 
 ![Course Recommendations](http://pathgather.github.io/predictor/images/suggested.png)
 
@@ -106,7 +139,7 @@ recommender = CourseRecommender.new
 # User has taken course-1 and course-2. Let's see what else they might like...
 recommender.predictions_for(item_set: ["course-1", "course-2"])
 
-# Already have the set you need stored in an input matrix? In our case, we do (the users matrix stores the courses a user has taken), so we can just do:
+# Already have the set you need stored in an input matrix? In our case, we do (the users matrix stores the channels a user has taken), so we can just do:
 recommender.predictions_for("user-1", matrix_label: :users)
 
 # Paginate too!
@@ -165,13 +198,13 @@ If at some point you decide to lower your similarity limits, you'll want to be s
 
 Boost
 ---------------------
-What if you want to recommend courses to users based not only on what courses they've taken, but on other attributes of courses that they may be interested in? You can do that by passing the :boost argument to predictions_for:
+What if you want to recommend channels to users based not only on what channels they've taken, but on other attributes of channels that they may be interested in? You can do that by passing the :boost argument to predictions_for:
 
 ```ruby
 class CourseRecommender
   include Predictor::Base
 
-  # Courses are compared to one another by the users taking them and their tags.
+  # channels are compared to one another by the users taking them and their tags.
   input_matrix :users,  weight: 3.0
   input_matrix :tags,   weight: 2.0
   input_matrix :topics, weight: 2.0
@@ -180,8 +213,8 @@ end
 recommender = CourseRecommender.new
 
 # We want to find recommendations for Billy, who's told us that he's
-# especially interested in free, interactive courses on Photoshop. So, we give
-# a boost to courses that are tagged as free and interactive and have
+# especially interested in free, interactive channels on Photoshop. So, we give
+# a boost to channels that are tagged as free and interactive and have
 # Photoshop as a topic:
 recommender.predictions_for("Billy", matrix_label: :users, boost: {tags: ['free', 'interactive'], topics: ["Photoshop"]})
 
@@ -205,8 +238,8 @@ You can also configure the namespace used by each class you create:
 ```ruby
   class CourseRecommender
     include Predictor::Base
-    redis_prefix "courses" # => "predictor:courses:users:items:user1"
-    redis_prefix { "courses_for_user-#{User.current.id}" } # => "predictor:courses_for_user-7:users:items:user1"
+    redis_prefix "channels" # => "predictor:channels:users:items:user1"
+    redis_prefix { "channels_for_user-#{User.current.id}" } # => "predictor:channels_for_user-7:users:items:user1"
   end
 ```
 
