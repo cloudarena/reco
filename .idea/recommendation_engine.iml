@@ -128,14 +128,14 @@
     <orderEntry type="jdk" jdkName="RVM: ruby-2.1.3" jdkType="RUBY_SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library">
-      <library name="predictor (v2.3.0, /Users/ali/Downloads/August'14/recommendation_engine/predictor) [path][gem]">
+      <library name="predictor (v2.3.0, /Users/ali/Downloads/August'14/recommendation_engine/predictor_stable) [path][gem]">
         <CLASSES>
-          <root url="file://$MODULE_DIR$/predictor/lib" />
-          <root url="file://$MODULE_DIR$/predictor/benchmark" />
+          <root url="file://$MODULE_DIR$/predictor_stable/lib" />
+          <root url="file://$MODULE_DIR$/predictor_stable/benchmark" />
         </CLASSES>
         <SOURCES>
-          <root url="file://$MODULE_DIR$/predictor/lib" />
-          <root url="file://$MODULE_DIR$/predictor/benchmark" />
+          <root url="file://$MODULE_DIR$/predictor_stable/lib" />
+          <root url="file://$MODULE_DIR$/predictor_stable/benchmark" />
         </SOURCES>
       </library>
     </orderEntry>

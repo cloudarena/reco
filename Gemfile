@@ -40,7 +40,7 @@ gem 'spring',        group: :development
 
 gem 'devise'
 gem 'rabl'
-gem 'predictor', :path => "predictor"
+gem 'predictor', :path => "predictor_stable"
 gem 'hiredis'
 gem 'delayed_job'
 gem 'delayed_job_active_record'

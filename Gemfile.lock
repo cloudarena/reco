@@ -1,5 +1,5 @@
 PATH
-  remote: predictor
+  remote: predictor_stable
   specs:
     predictor (2.3.0)
       redis (>= 3.0.0)
